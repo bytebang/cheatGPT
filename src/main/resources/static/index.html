@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cheat-GPT</title>
+    <script src="./showdown.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        h1 {
+            color: #0f62fe;
+        }
+
+        #inputText {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #0f62fe;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0053ba;
+        }
+
+        #markdownContent {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #statistics {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        } 
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .input-group button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cheat-GPT</h1>
+    <div class="input-group">
+         <input type="text" id="inputText" placeholder="Text eingeben">
+         <button onclick="sendRequest()">&#10148;</button>
+    </div>
+    <div id="markdownContent">Achtung: Hier handelt es sich um eine LLVM welche auf Anfrage Texte generieren kann. Im gegensatz zu anderen KIs ist hier kein Chatverlauf (im Sinne von mehrere Texte zu einem Thema) moeglich sondern es koennen nur einzelne Fragen gestellt werden. Wenn Ihr Kontingent an Tokens aufgebraucht ist, dann koennen Sie keine Fragen mehr stellen.</div>
+    <div id="statistics"></div>
+    <script>
+        function sendRequest() {
+            var inputText = document.getElementById("inputText").value;
+            document.getElementById("markdownContent").innerHTML = "<div>I am thinking about your question ....</div>";
+            
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var converter = new showdown.Converter();
+                    var responseObject = JSON.parse(this.responseText)
+                    var htmlText = converter.makeHtml(responseObject.answer.answer);
+                    document.getElementById("markdownContent").innerHTML = htmlText;
+                    
+                    document.getElementById("statistics").innerHTML = "Diese Anfrage brauchte " + responseObject.answer.tokensUsed + " Tokens. Jetzt verbleiben noch: " + responseObject.remeaningTokens;
+                }
+            };
+            xhr.open("GET", "./api/ask?question=" + encodeURIComponent(inputText), true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(JSON.stringify({ text: inputText }));
+        }
+        
+
+        document.getElementById("inputText").addEventListener("keypress", function(event) {
+            if (event.keyCode === 13) { // 13 ist der Keycode für die Enter-Taste
+                event.preventDefault(); // Verhindert Standardverhalten (z.B. Formular absenden)
+                // Führen Sie hier die Aktion aus, die bei Drücken von Enter erfolgen soll
+                sendRequest();
+            }
+        });
+    </script>
+</body>
+</html>
